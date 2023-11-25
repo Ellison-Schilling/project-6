@@ -1,72 +1,63 @@
-# UOCIS322 - Project 6 #
-Brevet time calculator with MongoDB, and a RESTful API!
+# UOCIS322 - Project 6 Brevets, but with RESTful API and MongoEngine now
 
-Read about MongoEngine and Flask-RESTful before you start: [http://docs.mongoengine.org/](http://docs.mongoengine.org/), [https://flask-restful.readthedocs.io/en/latest/](https://flask-restful.readthedocs.io/en/latest/).
 
-## Before you begin
-You *HAVE TO* copy `.env-example` into `.env` and specify your container port numbers there!
-Note that the default values (5000 and 5000) will work!
+# Descriptions
 
-*DO NOT PLACE LOCAL PORTS IN YOUR COMPOSE FILE!*
 
-## Overview
+## Application
 
-You will reuse your code from Project 5, which already has two services:
 
-* Brevets
-	* The entire web service
-* MongoDB
+This project involves the development of hosting a website that allows user input for the duration of a bike ride, and brevet locations in terms of distance. In return for such information, the program will automatically fill in the brevet times that should be put in place based on the standards given. The program relies heavily on JQuery, Python, JavaScript, HTML, MongoEngine and Docker for testing in a more controlled enviorment. Now, however the program is improved by providing the ability to save a race and the associated table using a submit button, and the ability to display the last submitted table using the display button. The tables are saved and served via MongoEngine through an API.
 
-For this project, you will re-organize `Brevets` into two separate services:
 
-* Web (Front-end)
-	* Time calculator (basically everything you had in project 4)
-* API (Back-end)
-	* A RESTful service to expose/store structured data in MongoDB.
 
-## Tasks
+## Algorithm
 
-* Implement a RESTful API in `api/`:
-	* Write a data schema using MongoEngine for Checkpoints and Brevets:
-		* `Checkpoint`:
-			* `distance`: float, required, (checkpoint distance in kilometers), 
-			* `location`: string, optional, (checkpoint location name), 
-			* `open_time`: datetime, required, (checkpoint opening time), 
-			* `close_time`: datetime, required, (checkpoint closing time).
-		* `Brevet`:
-			* `length`: float, required, (brevet distance in kilometers),
-			* `start_time`: datetime, required, (brevet start time),
-			* `checkpoints`: list of `Checkpoint`s, required, (checkpoints).
-	* Using the schema, build a RESTful API with the resource `/brevets/`:
-		* GET `http://API:PORT/api/brevets` should display all brevets stored in the database.
-		* GET `http://API:PORT/api/brevet/ID` should display brevet with id `ID`.
-		* POST `http://API:PORT/api/brevets` should insert brevet object in request into the database.
-		* DELETE `http://API:PORT/api/brevet/ID` should delete brevet with id `ID`.
-		* PUT `http://API:PORT/api/brevet/ID` should update brevet with id `ID` with object in request.
 
-* Copy over `brevets/` from your completed project 5.
-	* Replace every database related code in `brevets/` with calls to the new API.
-		* Remember: AutoGrader will ensure there is NO CONNECTION between `brevets` and `db` services. `brevets` should only operate through `api` and still function the way it did in project 5.
-		* Hint: Submit should send a POST request to the API to insert, Display should send a GET request, and display the last entry.
-	* Remove `config.py` and adjust `flask_brevets.py` to use the `PORT` and `DEBUG` values specified in env variables (see `docker-compose.yml`).
+In this project we take information from the user using JQuery in the html file and send it to our main python file called flask_brevets.py that then parses the information as needed as well as handles the webpage directing. From there flask_brevets sends a request to acp_times.py that handles ensuring the validity of the entries, as well as determing how much time should be allocated to the open and close times of the given brevet and sends such information back to flask_brevets.py. After that flask_brevets.py uses json to send the information back over to the html file that then formats and redirects the information to the webpage to fill in the boxes associated with the opening and closing time brevets. Beyond all this when the submit button is clicked all of the associated information on the page is stored using the API which utlizes MongoEngine to store all of the information in the flask app using a route case and jquery, then the page is cleared of all entries. When a user clicks on the display button, provided they have submitted at least one entry, the most recent entry is then fetched on the flask app from the API (which uses MongoEngine) and returned to the table via json. 
 
-* Update README.md with API documentation added.
 
-As always you'll turn in your `credentials.ini` through Canvas.
 
-## Grading Rubric
+# Instructions For Use
 
-* If your code works as expected: 100 points. This includes:
-    * API routes as outlined above function exactly the way expected,
-    * Web application works as expected in project 5,
-    * README is updated with the necessary details.
 
-* If the front-end service does not work, 20 points will be docked.
+## Docker Compose
+To run docker compose for this application first ascertain that you are in the correct directory, specifically the one that contains the Docker-compose file. From there proceed to make your Docker image by executing the command:
 
-* For each of the 5 requests that do not work, 15 points will be docked.
 
-* If none of the above work, 5 points will be assigned assuming project builds and runs, and `README` is updated. Otherwise, 0 will be assigned.
+docker-compose up --build
 
-## Authors
 
-Michal Young, Ram Durairajan. Updated by Ali Hassani.
+
+Supposing everything went smoothly, your web application should now be up and running. 
+
+
+
+## Web App
+
+
+
+In the web application there are three main important fields to fill:
+
+
+* The first is the distance of the brevet which you can select from the Distance selector. You may select from the provided options of 200, 300, 400, 600, 1000.
+
+
+* The second is the date and time selector for the start of your brevet labeled as "Begins at". There you may select the proper day, month, year, and time that you wish for your brevet to begin.
+
+
+* The third field to fill in is where you wish to place your control brevets in the race. You may choose to either type in the miles or kilometers field and rest assured that no matter which you choose all else will be filled in. After you type in your control brevet distance the rest of the row should fill in aside from the location which you may set. However, if you enter an invalid number according to ACP, then no automatic entries will appear until you correct it.
+
+* Beyond this there are two possible buttons for the user to click. The first button is called submit and will effectively save and clear the given table of all relevant information pertaining to the brevets. The second button is called display and will return the last saved table of relevant information pertaining to the brevets.
+
+
+
+
+# Authors
+
+Michal Young, Ram Durairajan. Updated by Ali Hassani. Completed by Ellison Schilling.
+
+## Contact Address
+
+ellisons@uoregon.edu
+
