@@ -182,7 +182,7 @@
                         event.preventDefault();
                         
                         var total_distance = $("#brevet_dist_km").val();   // Total distance of the race
-                        var date_time = $("#begin_date").val();   // Starting date and time of the race
+                        var date_time =$("#begin_date").val();   // Starting date and time of the race
                         var control_data= [];    // Empty list that will contain a dictionary of data related to the control brevets
 
                         // For every brevet (go to line 52 and see ways to reference brevets: by tag (control_time_table) or
@@ -212,8 +212,8 @@
                                 // Construct a dictionary
                                  var rowjson = {
                                     "kilometers": kilometers,
-                                    "open": open,
-                                    "close": close,
+                                    "open": open.format("YYYY-MM-DDTHH:mm"),
+                                    "close": close.format("YYYY-MM-DDTHH:mm"),
                                     "miles": miles,
                                     "location": location
                                 }
@@ -224,7 +224,7 @@
                         // Construct the data we will be sending Flask
                         var new_table = {
                            "total_distance" : total_distance,
-                           "date_time" : date_time,
+                           "date_time" : date_time.format("YYYY-MM-DDTHH:mm"),
                            "control_data" : control_data};
 
                         // Perfect! Now we have all the information that the user's entered
