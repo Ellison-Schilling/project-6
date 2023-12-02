@@ -18,7 +18,7 @@ def get_brevets():
     brevet control data including the control distance, open time, and close time.
     """
     # Get documents in brevets_database from the API
-    brevet_collection = requests.get(f"{API_URL}brevets").json()
+    brevet_collection = requests.get(f"{API_URL}/brevets").json()
 
     # We really only want the last part
     brevet = brevet_collection[-1]
@@ -26,20 +26,51 @@ def get_brevets():
     # Return the needed information
     return brevet["total_distance"], brevet["date_time"], brevet["control_data"]
 
+def get_control_brevet(id):
+    """
+    Obtains a specified brevet control from the database and returns it
+    """
+    brevet = requests.get(f"{API_URL}/brevet/{id}").json()
+    return brevet
+
+def get_every_brevet():
+    """
+    Obtains all brevet documents
+    """
+    brevet_collection = requests.get(f"{API_URL}/brevets").json()
+    return brevets
+
+def brevet_update(total_distance, date_time, control_data, id):
+    """
+    Updates the brevet information of a specified id
+    """
+    requests.put(f"{API_URL}/brevets/{id}", json={"total_distance": total_distance,
+                                                 "date_time": date_time,
+                                                 "control_data": control_data}).json()
+    return
+
 def insert_brevets(total_distance, date_time, control_data):
     """
-    Inserts a new brevet list of dictionaries into the database "brevets", under the collection "brevets".
-    
-    Inputs a list of dictionaries 
+    Inserts a new brevet into the database using the brevet API
+
+    Inputs the total_distance, date_time, and control_data
 
     Returns the unique ID assigned to the document by mongo (primary key.)
     """
     # Send a post request to the API
-    _id = requests.post(f"{API_URL}brevets", json={"total_distance": total_distance, "date_time": date_time, "control_data": control_data}).json()
+    _id = requests.post(f"{API_URL}brevets", json={"total_distance": total_distance, 
+                                            "date_time": date_time, 
+                                            "control_data": control_data}).json()
     
     # Format the id into a string and send back
     return str(_id)
 
+def delete_brevet(id):
+    """
+    Deletes the specified brevet resource
+    """
 
+    requests.delete(f"{API_URL}/brevet/{id}")
+    return
 
 

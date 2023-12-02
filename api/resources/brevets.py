@@ -15,7 +15,7 @@ from database.models import Brevet
 
 class Brevets(Resource):
     def get(self):
-        json_object = Brevets.objects().to_json()
+        json_object = Brevet.objects().to_json()
         return Response(json_object, mimetype="application/json", status=200)
 
     def post(self):
@@ -24,10 +24,10 @@ class Brevets(Resource):
         input_json = request.json
 
         ## Because input_json is a dictionary, we can do this:
-        #distance = input_json["distance"] # Should be a string
+        #kilomenters = input_json["distance"] # Should be a string
         #date_time = input_json["date_time"] # Should be a string
-        #checkpoints = input_json["checkpoints"] # Should be a list of dictionaries
+        #control_data = input_json["checkpoints"] # Should be a list of dictionaries
         #result = Brevet(distance=distance, date_time=date_time, checkpoints=checkpoints).save()
 
-        result = Brevets(**input_json).save()
+        result = Brevet(**input_json).save()
         return {'_id': str(result.id)}, 200

@@ -6,13 +6,15 @@ Replacement for RUSA ACP brevet time calculator
 
 import flask
 from flask import request
+import os
 
-import arrow  # Replacement for datetime, based on moment.js
+import arrow  # Replacement for date_time, based on moment.js
 import acp_times  # Brevet time calculations
+
 import config
 import sys
-
 import logging
+
 from mongo_brevets import get_brevets, insert_brevets
 
 ###
@@ -23,10 +25,9 @@ app.debug = True if "DEBUG" not in os.environ else os.environ["DEBUG"]
 port = True if "PORT" not in os.environ else os.environ["PORT"]
 app.logger.setLevel(logging.DEBUG)
 
-
 ###
-# API
-###
+# API 
+### 
 
 API_ADDR = os.environ["API_ADDR"]
 API_PORT = os.environ["API_PORT"]
@@ -56,6 +57,7 @@ def page_not_found(error):
 #   These return JSON, rather than rendering pages.
 #
 ###############
+
 @app.route("/_calc_times")
 def _calc_times():
     """
@@ -90,7 +92,7 @@ def _calc_times():
     close_time = acp_times.close_time(km, distance, arrow_time)
     
     # Happens on invalid input does not return anything helpful
-    if open_time == None:
+    if close_time == None:
         return error
 
     close_time = arrow.get(close_time)  
@@ -121,7 +123,7 @@ def submit():
 
         brevets_id = insert_brevets(total_distance, date_time, control_data)  # Make a call to our database file to store the brevets
 
-        return flask.jsonify(result={},
+        return flask.jsonify(brevet={},
                         message="Submitted!", 
                         status=1, # This is defined by you. You just read this value in your javascript.
                         mongo_id=brevets_id)
@@ -130,13 +132,13 @@ def submit():
         # If Flask catches your error, it means you didn't catch it yourself,
         # And Flask, by default, returns the error in an HTML.
         # We want /insert to respond with a JSON no matter what!
-        return flask.jsonify(result={},
+        return flask.jsonify(brevet={},
                         message="Oh no! Server error!", 
                         status=0, 
                         mongo_id='None')
 
 
-@app.route("/display")
+@app.route("/display", methods=["GET"])
 def display():
     """
     /display : fetches the latest brevets from the database.
@@ -148,7 +150,7 @@ def display():
     try:
         total_distance, date_time, control_data = get_brevets()   # Fetch the data from the database
         return flask.jsonify(
-                result={"total_distance" : total_distance,  # Return the data to json
+                brevet={"total_distance" : total_distance,  # Return the data to json
                          "date_time" : date_time,
                          "control_data" : control_data
                         }, 
@@ -156,9 +158,128 @@ def display():
                 message="Successfully fetched the brevets!")
     except:
         return flask.jsonify(
-                result={}, 
+                brevet={}, 
                 status=0,
                 message="Something went wrong, couldn't fetch any brevets!")
+
+@app.route("/api/brevets", methods=["GET", "POST"])
+def all_brevets():
+    """
+    Gets all brevets from the database
+    """
+    if request.method == "GET": 
+        try:
+            out = []
+            for brevet in get_all_brevets():
+                _id = brevet["_id"]["$oid"]
+
+                total_distance = brevet["total_distance"]
+                date_time = brevet["date_time"]
+                control_data = brevet["control_data"]
+
+                brevet={"id": _id, 
+                        "total_distance": total_distance, 
+                        "date_time": date_time, 
+                        "control_data": control_data}
+                out.append(brevet)
+
+            return flask.jsonify(out)
+
+        except:
+            return flask.jsonify(
+                    brevet={}, 
+                    status=0,
+                    message="Uh Oh, no brevet data fetched!")
+    
+    if request.method == "POST":
+        try:
+            input_json = request.json
+            # if successful, input_json is automatically parsed into a python dictionary
+
+            total_distance = input_json["total_distance"]
+            date_time = input_json["date_time"] 
+            control_data = input_json["control_data"] 
+
+            _id = insert_brevet(total_distance, date_time, control_data)
+
+            return flask.jsonify(brevet={},
+                            message="Succesfully inserted!", 
+                            status=1, 
+                            mongo_id=_id)
+        except:
+            return flask.jsonify(brevet={},
+                            message="Oh no! Server error!", 
+                            status=0, 
+                            mongo_id='None')
+
+
+@app.route("/api/brevet/<id>", methods=["GET", "PUT", "DELETE"])
+def specific_brevet(id):
+    """
+    Requests a single brevet from the database
+    """
+
+    if request.method == "GET":
+        try:
+            brevet = get_control_brevet(id)
+            _id = brevet["_id"]["$oid"]
+
+            control_data = brevet["control_data"]
+            total_distance = brevet["total_distance"]
+            date_time = brevet["date_time"]
+
+            result={"id": _id, 
+                    "total_distance": total_distance, 
+                    "date_time": date_time, 
+                    "control_data": control_data}
+
+            return flask.jsonify(result)
+
+        except:
+
+            return flask.jsonify(
+                    result={}, 
+                    status=0,
+                    message="Something went wrong, couldn't fetch any brevet data!")
+    
+    elif request.method == "PUT":
+        try:
+            input_json = request.json
+            # if successful, input_json is automatically parsed into a python dictionary
+
+            total_distance = input_json["total_distance"] # Should be a string
+            date_time = input_json["date_time"] # Should be a string
+            control_data = input_json["control_data"] # Should be a list of dictionaries
+            
+            brevet_update(id, total_distance, date_time, control_data)
+            
+            return flask.jsonify(
+                result={},
+                status=1,
+                message=f"Updated brevet {id} successfully!")
+        except:
+            return flask.jsonify(
+                    result={}, 
+                    status=0,
+                    message="Uh Oh, unable to update brevet data!")
+
+    elif request.method == "DELETE":
+        try:
+            delete_brevet(id)
+            return flask.jsonify(
+                result={},
+                status=1,
+                message=f"Deleted brevet {id} successfully!")
+        except:
+            return flask.jsonify(
+                    result={}, 
+                    status=0,
+                    message="Uh Oh, was not able to delete brevet data!")
+
+
+
+
+
 
 
 #############
